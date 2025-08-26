@@ -1,0 +1,26 @@
+class Solution {
+    public long countGood(int[] nums, int k) {
+        Map<Integer, Integer> freq= new HashMap<>();
+        long count=0;
+        int left=0;
+        long pairs=0;
+
+        for(int right=0; right<nums.length; right++){
+            int val=nums[right];
+            int prevFreq=freq.getOrDefault(val,0);
+            pairs+=prevFreq;
+            freq.put(val,prevFreq+1);
+
+            while(pairs>=k){
+                int leftVal=nums[left];
+                int leftFreq =freq.get(leftVal);
+                pairs -=(leftFreq-1);
+                freq.put(leftVal, leftFreq-1);
+                left++;
+            }
+            count+=left;
+        }
+        return count;
+        
+    }
+}
