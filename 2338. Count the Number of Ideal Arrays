@@ -1,0 +1,62 @@
+class Solution {
+    static final int MOD = 1_000_000_007;
+    static final int MAX = 10000;
+    long[] factorial = new long[MAX + 1];
+    long[] inverse = new long[MAX + 1];
+
+    public int idealArrays(int n, int maxValue) {
+        precomputeFactorials();
+
+        // dp[i] = number of sequences ending with value i
+        int maxLen = Math.min(n, 14); // because 2^14 > 10^4
+        long[][] dp = new long[maxLen + 1][maxValue + 1];
+
+        for (int i = 1; i <= maxValue; i++) dp[1][i] = 1;
+
+        for (int len = 2; len <= maxLen; len++) {
+            for (int i = 1; i <= maxValue; i++) {
+                for (int j = 2 * i; j <= maxValue; j += i) {
+                    dp[len][j] = (dp[len][j] + dp[len - 1][i]) % MOD;
+                }
+            }
+        }
+
+        long result = 0;
+        for (int len = 1; len <= maxLen; len++) {
+            long count = 0;
+            for (int i = 1; i <= maxValue; i++) {
+                count = (count + dp[len][i]) % MOD;
+            }
+            result = (result + count * nCk(n - 1, len - 1)) % MOD;
+        }
+
+        return (int) result;
+    }
+
+    void precomputeFactorials() {
+        factorial[0] = inverse[0] = 1;
+        for (int i = 1; i <= MAX; i++) {
+            factorial[i] = factorial[i - 1] * i % MOD;
+            inverse[i] = modInverse(factorial[i]);
+        }
+    }
+
+    long nCk(int n, int k) {
+        if (k > n) return 0;
+        return factorial[n] * inverse[k] % MOD * inverse[n - k] % MOD;
+    }
+
+    long modInverse(long x) {
+        return pow(x, MOD - 2);
+    }
+
+    long pow(long x, long y) {
+        long res = 1;
+        while (y > 0) {
+            if ((y & 1) == 1) res = res * x % MOD;
+            x = x * x % MOD;
+            y >>= 1;
+        }
+        return res;
+    }
+}
