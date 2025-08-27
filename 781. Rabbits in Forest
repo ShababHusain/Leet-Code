@@ -1,0 +1,16 @@
+class Solution {
+    public int numRabbits(int[] answers) {
+        Map<Integer,Integer> count=new HashMap<>();
+        for(int a: answers)
+            count.put(a,count.getOrDefault(a,0)+1);
+        int total=0;
+        for(int k:count.keySet()){
+            int v=count.get(k);
+            int groupSize=k+1;
+            int groups=(v+k)/groupSize;
+            total+=groups*groupSize;
+        }
+        return total;
+        
+    }
+}
