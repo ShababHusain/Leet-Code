@@ -1,0 +1,20 @@
+class Solution {
+    public int countCompleteSubarrays(int[] nums) {
+        int totalDistinct=new HashSet<>(Arrays.asList(Arrays.stream(nums).boxed().toArray(Integer[]::new))).size();
+        int n=nums.length;
+        int count=0;
+
+        for(int left=0; left<n;left++){
+            Set<Integer> seen = new HashSet<>();
+            for(int right = left; right<n; right++){
+                seen.add(nums[right]);
+                
+                if(seen.size()==totalDistinct){
+                    count++;
+                }
+            }
+        }
+        return count;
+        
+    }
+}
