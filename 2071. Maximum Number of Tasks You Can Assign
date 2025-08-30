@@ -1,0 +1,64 @@
+class Solution {
+    public int maxTaskAssign(int[] tasks, int[] workers, int pills, int strength) {
+        Arrays.sort(tasks);
+        Arrays.sort(workers);
+
+        int n = tasks.length, m = workers.length;
+        int lo = 0, hi = Math.min(n, m), ans = 0;
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            if (canAssign(mid, tasks, workers, pills, strength)) {
+                ans = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        return ans;
+    }
+
+    // Check if we can assign k tasks: choose the k smallest tasks and k largest workers
+    private boolean canAssign(int k, int[] tasks, int[] workers, int pills, int strength) {
+        if (k == 0) return true;
+
+        int n = tasks.length, m = workers.length;
+        // window of workers we can use: indices [m-k .. m-1]
+        int j = m - 1;
+        TreeMap<Integer, Integer> avail = new TreeMap<>();
+        int remainingPills = pills;
+
+        // iterate tasks among the k smallest, from largest to smallest
+        for (int i = k - 1; i >= 0; --i) {
+            int need = tasks[i];
+
+            // add all workers among the k strongest whose strength+pill >= need
+            while (j >= m - k && workers[j] + strength >= need) {
+                avail.merge(workers[j], 1, Integer::sum);
+                j--;
+            }
+
+            if (avail.isEmpty()) return false;
+
+            // if the strongest available worker can do it without a pill, use them
+            Integer strongest = avail.lastKey();
+            if (strongest >= need) {
+                decrementMap(avail, strongest);
+            } else {
+                // otherwise try to use a pill on the weakest available worker
+                if (remainingPills == 0) return false;
+                Integer weakest = avail.firstKey();
+                // after taking a pill, weakest+strength >= need must hold because
+                // we only inserted workers with worker+strength >= need
+                decrementMap(avail, weakest);
+                remainingPills--;
+            }
+        }
+        return true;
+    }
+
+    private void decrementMap(TreeMap<Integer,Integer> map, int key) {
+        int cnt = map.get(key);
+        if (cnt == 1) map.remove(key);
+        else map.put(key, cnt - 1);
+    }
+}
