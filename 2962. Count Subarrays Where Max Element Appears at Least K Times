@@ -1,0 +1,26 @@
+class Solution {
+    public long countSubarrays(int[] nums, int k) {
+        int maxVal=0;
+        for(int num:nums){
+            maxVal=Math.max(maxVal,num);
+        }
+
+        long count=0;
+        int left=0;
+        int freq=0;
+        for(int right=0; right<nums.length; right++){
+            if(nums[right]==maxVal){
+                freq++;
+            }
+            while(freq>=k){
+                count +=nums.length-right;
+                if(nums[left]==maxVal){
+                    freq--;
+                }
+                left++;
+            }
+        }
+
+        return count;
+    }
+}
