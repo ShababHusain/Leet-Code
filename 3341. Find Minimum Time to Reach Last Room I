@@ -1,0 +1,36 @@
+class Solution {
+    public int minTimeToReach(int[][] moveTime) {
+        int n = moveTime.length, m = moveTime[0].length;
+
+        long[][] dist = new long[n][m];
+        for (int i = 0; i < n; i++) Arrays.fill(dist[i], Long.MAX_VALUE);
+
+        // {time, r, c}
+        PriorityQueue<long[]> pq = new PriorityQueue<>(Comparator.comparingLong(a -> a[0]));
+        dist[0][0] = 0;
+        pq.offer(new long[]{0, 0, 0});
+
+        int[][] dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+
+        while (!pq.isEmpty()) {
+            long[] cur = pq.poll();
+            long t = cur[0];
+            int r = (int) cur[1], c = (int) cur[2];
+
+            if (r == n - 1 && c == m - 1) return (int) t;
+            if (t != dist[r][c]) continue;
+
+            for (int[] d : dirs) {
+                int nr = r + d[0], nc = c + d[1];
+                if (nr < 0 || nc < 0 || nr >= n || nc >= m) continue;
+
+                long nt = Math.max(t, moveTime[nr][nc]) + 1; // wait until neighbor opens, then move 1s
+                if (nt < dist[nr][nc]) {
+                    dist[nr][nc] = nt;
+                    pq.offer(new long[]{nt, nr, nc});
+                }
+            }
+        }
+        return -1; // unreachable (shouldn't happen per constraints)
+    }
+}
