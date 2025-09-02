@@ -1,0 +1,41 @@
+
+import java.util.*;
+
+class Solution {
+    public int minTimeToReach(int[][] moveTime) {
+        int n = moveTime.length, m = moveTime[0].length;
+        int[][][] dist = new int[n][m][2];
+        for (int[][] row : dist)
+            for (int[] cell : row)
+                Arrays.fill(cell, Integer.MAX_VALUE);
+
+        PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[0]));
+        pq.offer(new int[]{0, 0, 0, 0}); // time, x, y, parity
+        dist[0][0][0] = 0;
+
+        int[][] dirs = {{0,1},{1,0},{0,-1},{-1,0}};
+
+        while (!pq.isEmpty()) {
+            int[] cur = pq.poll();
+            int time = cur[0], x = cur[1], y = cur[2], parity = cur[3];
+
+            if (x == n - 1 && y == m - 1) return time;
+
+            for (int[] d : dirs) {
+                int nx = x + d[0], ny = y + d[1];
+                if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;
+
+                int wait = Math.max(time, moveTime[nx][ny]);
+                int step = (parity == 0) ? 1 : 2;
+                int newTime = wait + step;
+
+                if (newTime < dist[nx][ny][1 - parity]) {
+                    dist[nx][ny][1 - parity] = newTime;
+                    pq.offer(new int[]{newTime, nx, ny, 1 - parity});
+                }
+            }
+        }
+
+        return -1; // unreachable
+    }
+}
