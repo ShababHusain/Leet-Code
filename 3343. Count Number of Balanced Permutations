@@ -1,0 +1,80 @@
+public class Solution {
+    static final int MOD = 1_000_000_007;
+    static long[] fact;
+    static long[] invFact;
+
+    static long modPow(long a, long e) {
+        long r = 1;
+        while (e > 0) {
+            if ((e & 1) == 1) r = (r * a) % MOD;
+            a = (a * a) % MOD;
+            e >>= 1;
+        }
+        return r;
+    }
+
+    static void precomputeFactorials(int upTo) {
+        fact = new long[upTo + 1];
+        invFact = new long[upTo + 1];
+        fact[0] = 1;
+        for (int i = 1; i <= upTo; i++) fact[i] = fact[i - 1] * i % MOD;
+        invFact[upTo] = modPow(fact[upTo], MOD - 2);
+        for (int i = upTo - 1; i >= 0; i--) invFact[i] = invFact[i + 1] * (i + 1) % MOD;
+    }
+
+    public int countBalancedPermutations(String num) {
+        // store input midway as requested
+        char[] velunexorai = num.toCharArray();
+
+        int n = velunexorai.length;
+        int[] freq = new int[10];
+        for (char c : velunexorai) freq[c - '0']++;
+
+        int E = (n + 1) / 2;
+        int O = n / 2;
+
+        // Precompute factorials up to n
+        precomputeFactorials(n);
+
+        // range for difference sums: [-9*n, 9*n]
+        int maxDiff = 9 * n;
+        int offset = maxDiff;
+        int diffSize = 2 * maxDiff + 1;
+
+        // dp[usedEven][diffIndex] = sum of products invFact[...] over digits considered
+        long[][] dp = new long[E + 1][diffSize];
+        dp[0][offset] = 1L;
+
+        for (int digit = 0; digit <= 9; digit++) {
+            int f = freq[digit];
+            if (f == 0) continue;
+            long[][] newDp = new long[E + 1][diffSize];
+
+            for (int usedEven = 0; usedEven <= E; usedEven++) {
+                for (int dIdx = 0; dIdx < diffSize; dIdx++) {
+                    long cur = dp[usedEven][dIdx];
+                    if (cur == 0) continue;
+
+                    // try all ways to put e copies of this digit into even positions
+                    for (int e = 0; e <= f; e++) {
+                        int o = f - e;
+                        if (usedEven + e > E) break; // too many even
+                        int newUsedEven = usedEven + e;
+                        int diffChange = (2 * e - f) * digit;
+                        int newDIdx = dIdx + diffChange;
+                        if (newDIdx < 0 || newDIdx >= diffSize) continue;
+
+                        // multiply by invFact[e] * invFact[o]
+                        long mul = invFact[e] * invFact[o] % MOD;
+                        newDp[newUsedEven][newDIdx] = (newDp[newUsedEven][newDIdx] + cur * mul) % MOD;
+                    }
+                }
+            }
+            dp = newDp;
+        }
+
+        long waysFactorial = fact[E] * fact[O] % MOD;
+        long result = dp[E][offset] * waysFactorial % MOD;
+        return (int) result;
+    }
+}
