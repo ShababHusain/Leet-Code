@@ -1,0 +1,71 @@
+import java.util.*;
+
+class Solution {
+    private static final int MOD = 1_000_000_007;
+
+    public int lengthAfterTransformations(String s, int t, List<Integer> nums) {
+        int[][] T = buildTransformationMatrix(nums);
+        int[][] poweredT = matrixPower(T, t);
+
+        int[] count = new int[26];
+        for (char c : s.toCharArray()) {
+            count[c - 'a']++;
+        }
+
+        long[] result = new long[26];
+        for (int i = 0; i < 26; i++) {
+            for (int j = 0; j < 26; j++) {
+                result[j] = (result[j] + (long) count[i] * poweredT[i][j]) % MOD;
+            }
+        }
+
+        long total = 0;
+        for (long val : result) {
+            total = (total + val) % MOD;
+        }
+
+        return (int) total;
+    }
+
+    private int[][] buildTransformationMatrix(List<Integer> nums) {
+        int[][] T = new int[26][26];
+        for (int i = 0; i < 26; i++) {
+            for (int step = 1; step <= nums.get(i); step++) {
+                T[i][(i + step) % 26]++;
+            }
+        }
+        return T;
+    }
+
+    private int[][] matrixPower(int[][] M, int power) {
+        int[][] result = identityMatrix(26);
+        while (power > 0) {
+            if ((power & 1) == 1) {
+                result = multiply(result, M);
+            }
+            M = multiply(M, M);
+            power >>= 1;
+        }
+        return result;
+    }
+
+    private int[][] identityMatrix(int size) {
+        int[][] I = new int[size][size];
+        for (int i = 0; i < size; i++) {
+            I[i][i] = 1;
+        }
+        return I;
+    }
+
+    private int[][] multiply(int[][] A, int[][] B) {
+        int[][] C = new int[26][26];
+        for (int i = 0; i < 26; i++) {
+            for (int j = 0; j < 26; j++) {
+                for (int k = 0; k < 26; k++) {
+                    C[i][j] = (int) ((C[i][j] + (long) A[i][k] * B[k][j]) % MOD);
+                }
+            }
+        }
+        return C;
+    }
+}
