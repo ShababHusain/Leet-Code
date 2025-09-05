@@ -1,0 +1,72 @@
+class Solution {
+    private int m;
+    private static final int MOD = 1_000_000_007;
+
+    public int colorTheGrid(int m, int n) {
+        this.m = m;
+        int maxState = (int) Math.pow(3, m);
+        List<Integer> validStates = new ArrayList<>();
+        Map<Integer, List<Integer>> transitions = new HashMap<>();
+
+        // Step 1: Generate all valid column states
+        for (int state = 0; state < maxState; state++) {
+            if (isValid(state)) {
+                validStates.add(state);
+            }
+        }
+
+        // Step 2: Build transition map
+        for (int a : validStates) {
+            for (int b : validStates) {
+                if (canTransition(a, b)) {
+                    transitions.computeIfAbsent(a, k -> new ArrayList<>()).add(b);
+                }
+            }
+        }
+
+        // Step 3: DP over columns
+        Map<Integer, Integer> dp = new HashMap<>();
+        for (int state : validStates) {
+            dp.put(state, 1);
+        }
+
+        for (int col = 1; col < n; col++) {
+            Map<Integer, Integer> nextDP = new HashMap<>();
+            for (int prev : dp.keySet()) {
+                for (int next : transitions.getOrDefault(prev, List.of())) {
+                    nextDP.put(next, (nextDP.getOrDefault(next, 0) + dp.get(prev)) % MOD);
+                }
+            }
+            dp = nextDP;
+        }
+
+        int total = 0;
+        for (int count : dp.values()) {
+            total = (total + count) % MOD;
+        }
+
+        return total;
+    }
+
+    // Check vertical validity
+    private boolean isValid(int state) {
+        int prev = -1;
+        for (int i = 0; i < m; i++) {
+            int color = state % 3;
+            if (color == prev) return false;
+            prev = color;
+            state /= 3;
+        }
+        return true;
+    }
+
+    // Check horizontal validity
+    private boolean canTransition(int a, int b) {
+        for (int i = 0; i < m; i++) {
+            if (a % 3 == b % 3) return false;
+            a /= 3;
+            b /= 3;
+        }
+        return true;
+    }
+}
