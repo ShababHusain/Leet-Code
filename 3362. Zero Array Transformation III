@@ -1,0 +1,80 @@
+import java.util.*;
+
+public class Solution {
+    // Fenwick supporting range add and point query
+    static class Fenwick {
+        int n;
+        long[] bit;
+        Fenwick(int n) {
+            this.n = n;
+            bit = new long[n + 5];
+        }
+        // add val at index i (0-based)
+        void addOne(int i, long val) {
+            i++; // 1-based inside BIT
+            while (i <= n + 2) {
+                bit[i] += val;
+                i += i & -i;
+            }
+        }
+        // prefix sum [0..i]
+        long sumPrefix(int i) {
+            i++;
+            long s = 0;
+            while (i > 0) {
+                s += bit[i];
+                i -= i & -i;
+            }
+            return s;
+        }
+        // range add [l..r] by val
+        void rangeAdd(int l, int r, long val) {
+            if (l > r) return;
+            addOne(l, val);
+            addOne(r + 1, -val);
+        }
+        // point query at i
+        long pointQuery(int i) {
+            return sumPrefix(i);
+        }
+    }
+
+    public int maxRemoval(int[] nums, int[][] queries) {
+        int n = nums.length;
+        int m = queries.length;
+        // Sort queries by left ascending
+        Integer[] idx = new Integer[m];
+        for (int i = 0; i < m; i++) idx[i] = i;
+        Arrays.sort(idx, Comparator.comparingInt(a -> queries[a][0]));
+
+        // Max-heap by right endpoint (largest r first)
+        PriorityQueue<int[]> pq = new PriorityQueue<>((a,b) -> Integer.compare(b[1], a[1]));
+        Fenwick bit = new Fenwick(n);
+
+        int ptr = 0;              // pointer into sorted queries
+        int used = 0;             // number of queries we must keep
+
+        for (int i = 0; i < n; i++) {
+            // push all queries whose left <= i
+            while (ptr < m && queries[idx[ptr]][0] <= i) {
+                int id = idx[ptr++];
+                pq.offer(new int[]{queries[id][0], queries[id][1]});
+            }
+
+            // while coverage at i is less than required, pick intervals
+            while (bit.pointQuery(i) < nums[i]) {
+                // discard intervals that cannot cover i (r < i)
+                while (!pq.isEmpty() && pq.peek()[1] < i) pq.poll();
+                if (pq.isEmpty()) {
+                    return -1; // impossible to satisfy this index
+                }
+                int[] pick = pq.poll();
+                // choose this interval: range add +1
+                bit.rangeAdd(pick[0], pick[1], 1);
+                used++;
+            }
+        }
+
+        return m - used;
+    }
+}
