@@ -1,0 +1,37 @@
+class Solution {
+    public long maximumValueSum(int[] nums, int k, int[][] edges) {
+        int n = nums.length;
+        List<List<Integer>> tree = new ArrayList<>();
+        for (int i = 0; i < n; i++) tree.add(new ArrayList<>());
+        for (int[] e : edges) {
+            tree.get(e[0]).add(e[1]);
+            tree.get(e[1]).add(e[0]);
+        }
+
+        long[] result = dfs(0, -1, nums, k, tree);
+        return result[0]; // max sum with even number of XORs
+    }
+
+    // result[0] = max sum with even XOR count
+    // result[1] = max sum with odd XOR count
+    private long[] dfs(int node, int parent, int[] nums, int k, List<List<Integer>> tree) {
+        long xorVal = nums[node] ^ k;
+        long keepVal = nums[node];
+
+        long even = keepVal;
+        long odd = xorVal;
+
+        for (int child : tree.get(node)) {
+            if (child == parent) continue;
+            long[] childRes = dfs(child, node, nums, k, tree);
+
+            long newEven = Math.max(even + childRes[0], odd + childRes[1]);
+            long newOdd = Math.max(even + childRes[1], odd + childRes[0]);
+
+            even = newEven;
+            odd = newOdd;
+        }
+
+        return new long[]{even, odd};
+    }
+}
