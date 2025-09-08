@@ -1,0 +1,64 @@
+class Solution {
+    public int[] maxTargetNodes(int[][] edges1, int[][] edges2, int k) {
+        int n = edges1.length + 1;
+        int m = edges2.length + 1;
+
+        List<List<Integer>> tree1 = buildGraph(edges1, n);
+        List<List<Integer>> tree2 = buildGraph(edges2, m);
+
+        int[] result = new int[n];
+        int[] reachTree1 = new int[n];
+        int maxReachTree2 = 0;
+
+        // Precompute reachable nodes in tree1 for each node
+        for (int i = 0; i < n; i++) {
+            reachTree1[i] = bfs(tree1, i, k);
+        }
+
+        // Precompute max reachable nodes in tree2 within k - 1
+        if (k > 0) {
+            for (int i = 0; i < m; i++) {
+                maxReachTree2 = Math.max(maxReachTree2, bfs(tree2, i, k - 1));
+            }
+        }
+
+        // Combine results
+        for (int i = 0; i < n; i++) {
+            result[i] = reachTree1[i] + maxReachTree2;
+        }
+
+        return result;
+    }
+
+    private List<List<Integer>> buildGraph(int[][] edges, int size) {
+        List<List<Integer>> graph = new ArrayList<>();
+        for (int i = 0; i < size; i++) graph.add(new ArrayList<>());
+        for (int[] edge : edges) {
+            graph.get(edge[0]).add(edge[1]);
+            graph.get(edge[1]).add(edge[0]);
+        }
+        return graph;
+    }
+
+    private int bfs(List<List<Integer>> graph, int start, int maxDepth) {
+        Queue<int[]> queue = new LinkedList<>();
+        boolean[] visited = new boolean[graph.size()];
+        queue.offer(new int[]{start, 0});
+        visited[start] = true;
+        int count = 0;
+
+        while (!queue.isEmpty()) {
+            int[] curr = queue.poll();
+            int node = curr[0], depth = curr[1];
+            if (depth > maxDepth) continue;
+            count++;
+            for (int neighbor : graph.get(node)) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    queue.offer(new int[]{neighbor, depth + 1});
+                }
+            }
+        }
+        return count;
+    }
+}
