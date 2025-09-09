@@ -1,0 +1,9 @@
+long totalWays = 0;
+        for (int a = 0; a <= Math.min(n, limit); a++) {
+            int minB = Math.max(0, n - a - limit);
+            int maxB = Math.min(limit, n - a);
+            if (minB <= maxB) {
+                totalWays += (maxB - minB + 1);
+            }
+        }
+        return totalWays;
