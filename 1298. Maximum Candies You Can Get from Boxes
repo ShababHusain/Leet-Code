@@ -1,0 +1,44 @@
+class Solution {
+    public int maxCandies(int[] status, int[] candies, int[][] keys, int[][] containedBoxes, int[] initialBoxes) {
+        int n = status.length;
+        boolean[] visited = new boolean[n];
+        boolean[] hasKey = new boolean[n];
+        Set<Integer> boxSet = new HashSet<>();
+
+        for (int box : initialBoxes) {
+            boxSet.add(box);
+        }
+
+        int totalCandies = 0;
+        boolean progress = true;
+
+        while (progress) {
+            progress = false;
+            List<Integer> newBoxes = new ArrayList<>();
+            Iterator<Integer> it = boxSet.iterator();
+
+            while (it.hasNext()) {
+                int box = it.next();
+                if ((status[box] == 1 || hasKey[box]) && !visited[box]) {
+                    visited[box] = true;
+                    totalCandies += candies[box];
+                    progress = true;
+
+                    for (int key : keys[box]) {
+                        hasKey[key] = true;
+                    }
+
+                    for (int contained : containedBoxes[box]) {
+                        newBoxes.add(contained);
+                    }
+
+                    it.remove(); // Safe removal
+                }
+            }
+
+            boxSet.addAll(newBoxes); // Add new boxes after iteration
+        }
+
+        return totalCandies;
+    }
+}
