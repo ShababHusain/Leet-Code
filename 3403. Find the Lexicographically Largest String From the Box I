@@ -1,0 +1,63 @@
+class Solution {
+    public String answerString(String word, int numFriends) {
+        int n = word.length();
+        int m = numFriends;
+
+        // Special cases
+        if (m == 1) return word;
+        if (m == n) {
+            char maxChar = 'a';
+            for (char c : word.toCharArray()) if (c > maxChar) maxChar = c;
+            return String.valueOf(maxChar);
+        }
+
+        int bestL = -1, bestR = -1;
+        boolean bestSet = false;
+
+        for (int i = 0; i < n; i++) {
+            // j_max = n - (m - i)  clipped to n-1
+            int jMax = n - m + i;
+            if (jMax > n - 1) jMax = n - 1;
+            if (jMax < i) continue; // no valid substring starting at i (shouldn't happen when m <= n)
+
+            if (!bestSet) {
+                bestL = i;
+                bestR = jMax;
+                bestSet = true;
+                continue;
+            }
+
+            // Compare substring word[i..jMax] with current best word[bestL..bestR]
+            int a = i, b = bestL;
+            int endA = jMax, endB = bestR;
+            boolean decided = false;
+
+            while (a <= endA && b <= endB) {
+                char ca = word.charAt(a);
+                char cb = word.charAt(b);
+                if (ca != cb) {
+                    if (ca > cb) {
+                        bestL = i;
+                        bestR = jMax;
+                    }
+                    decided = true;
+                    break;
+                }
+                a++; b++;
+            }
+
+            if (!decided) {
+                // equal up to the min length, longer substring is lexicographically larger
+                int lenA = endA - i + 1;
+                int lenB = endB - bestL + 1;
+                if (lenA > lenB) {
+                    bestL = i;
+                    bestR = jMax;
+                }
+            }
+        }
+
+        // return final substring
+        return word.substring(bestL, bestR + 1);
+    }
+}
