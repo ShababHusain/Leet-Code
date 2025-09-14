@@ -1,0 +1,98 @@
+import java.util.Arrays;
+
+class Solution {
+    private static final int INF = Integer.MAX_VALUE / 4;
+
+    public int maxDifference(String s, int k) {
+        int n = s.length();
+        int ans = Integer.MIN_VALUE;
+
+        // digits '0'..'4'
+        for (int a = 0; a <= 4; a++) {
+            for (int b = 0; b <= 4; b++) {
+                if (a == b) continue;
+
+                // prefix counts length n+1
+                int[] prefA = new int[n + 1];
+                int[] prefB = new int[n + 1];
+                for (int i = 0; i < n; i++) {
+                    prefA[i + 1] = prefA[i] + ((s.charAt(i) - '0') == a ? 1 : 0);
+                    prefB[i + 1] = prefB[i] + ((s.charAt(i) - '0') == b ? 1 : 0);
+                }
+
+                int maxBCount = prefB[n];
+                // if b occurs less than 2 times overall, we can never get freq_b >= 2
+                if (maxBCount < 2) continue;
+
+                // S[i] = prefA[i] - prefB[i]
+                int[] S = new int[n + 1];
+                for (int i = 0; i <= n; i++) S[i] = prefA[i] - prefB[i];
+
+                // build 4 segment trees (for parity combos pa*2 + pbParity)
+                int size = maxBCount + 1; // indices 0..maxBCount inclusive
+                int base = 1;
+                while (base < size) base <<= 1;
+                int treeSize = base << 1;
+
+                int[][] seg = new int[4][treeSize];
+                for (int t = 0; t < 4; t++) {
+                    Arrays.fill(seg[t], INF);
+                }
+
+                // helper lambdas as methods below (we'll inline them)
+                // Insert L = R - k as candidate left index
+                // Query minimal S[L] in seg[treeIdx] over positions [0..limit]
+
+                for (int R = k; R <= n; R++) {
+                    int L = R - k;
+                    // insert L into its corresponding seg tree
+                    int paL = prefA[L] & 1;
+                    int pbParityL = prefB[L] & 1;
+                    int treeIdxInsert = paL * 2 + pbParityL;
+                    int pos = prefB[L]; // 0..maxBCount
+                    // point-update seg[treeIdxInsert] at pos with min(existing, S[L])
+                    int node = pos + base;
+                    if (S[L] < seg[treeIdxInsert][node]) {
+                        seg[treeIdxInsert][node] = S[L];
+                        node >>= 1;
+                        while (node >= 1) {
+                            int v = Math.min(seg[treeIdxInsert][node << 1], seg[treeIdxInsert][(node << 1) + 1]);
+                            if (seg[treeIdxInsert][node] == v) break; // small optimization
+                            seg[treeIdxInsert][node] = v;
+                            node >>= 1;
+                        }
+                    }
+
+                    // Now try to form substring ending at R-1 (prefix index R)
+                    int pbR = prefB[R];
+                    if (pbR >= 2) {
+                        int paR = prefA[R] & 1;
+                        int pbParityR = prefB[R] & 1;
+                        int treeIdxQuery = (1 - paR) * 2 + pbParityR; // paL must be 1 - paR, pbParityL == pbParityR
+                        int limit = pbR - 2; // we need prefB[L] <= pbR - 2
+
+                        // query min on seg[treeIdxQuery] over [0..limit]
+                        int lnode = base + 0;
+                        int rnode = base + limit;
+                        int best = INF;
+                        while (lnode <= rnode) {
+                            if ((lnode & 1) == 1) {
+                                best = Math.min(best, seg[treeIdxQuery][lnode++]);
+                            }
+                            if ((rnode & 1) == 0) {
+                                best = Math.min(best, seg[treeIdxQuery][rnode--]);
+                            }
+                            lnode >>= 1; rnode >>= 1;
+                        }
+                        if (best != INF) {
+                            int candidate = S[R] - best;
+                            if (candidate > ans) ans = candidate;
+                        }
+                    }
+                } // end R loop
+            } // end b
+        } // end a
+
+        return (ans == Integer.MIN_VALUE) ? -1 : ans;
+    }
+}
