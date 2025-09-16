@@ -1,0 +1,39 @@
+class Solution {
+    public int maxDistance(String s, int k) {
+        int n = s.length();
+        int ans = 0;
+
+        // iterate over sign pairs (sx, sy) in {+1, -1} x {+1, -1}
+        int[] signs = {1, -1};
+        for (int sx : signs) {
+            for (int sy : signs) {
+                int base = 0;   // sum of contributions (+1 / -1)
+                int neg = 0;    // number of contributions equal to -1 in current prefix
+
+                for (int i = 0; i < n; i++) {
+                    char c = s.charAt(i);
+                    int val;
+                    // val = sx*dx + sy*dy -> for directions:
+                    // N: (0,1) -> val = sy
+                    // S: (0,-1) -> val = -sy
+                    // E: (1,0) -> val = sx
+                    // W: (-1,0) -> val = -sx
+                    if (c == 'N') val = sy;
+                    else if (c == 'S') val = -sy;
+                    else if (c == 'E') val = sx;
+                    else /* 'W' */ val = -sx;
+
+                    base += val;
+                    if (val == -1) neg++;
+
+                    // With up to k changes among this prefix, convert up to min(k, neg) negatives
+                    int convert = Math.min(k, neg);
+                    int candidate = base + 2 * convert; // each conversion adds +2
+                    if (candidate > ans) ans = candidate;
+                }
+            }
+        }
+
+        return ans;
+    }
+}
