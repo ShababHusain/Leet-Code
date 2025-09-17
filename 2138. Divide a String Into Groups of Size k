@@ -1,0 +1,21 @@
+class Solution {
+    public String[] divideString(String s, int k, char fill) {
+        int n = s.length();
+        int totalGroups = (n + k - 1) / k; // ceiling of n/k
+        String[] result = new String[totalGroups];
+
+        // Pad the string with fill characters if needed
+        int remainder = n % k;
+        if (remainder != 0) {
+            int padLength = k - remainder;
+            s += String.valueOf(fill).repeat(padLength);
+        }
+
+        // Slice the string into k-sized groups
+        for (int i = 0; i < totalGroups; i++) {
+            result[i] = s.substring(i * k, (i + 1) * k);
+        }
+
+        return result;
+    }
+}
