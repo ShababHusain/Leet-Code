@@ -1,0 +1,55 @@
+class Solution {
+    public long kthSmallestProduct(int[] nums1, int[] nums2, long k) {
+        long left = -10_000_000_000L, right = 10_000_000_000L; // product range
+        while (left < right) {
+            long mid = left + (right - left) / 2;
+            if (countLE(nums1, nums2, mid) >= k) right = mid;
+            else left = mid + 1;
+        }
+        return left;
+    }
+
+    // count pairs (i,j) with nums1[i] * nums2[j] <= x
+    private long countLE(int[] a1, int[] a2, long x) {
+        long cnt = 0;
+        int n2 = a2.length;
+        for (int a : a1) {
+            if (a == 0) {
+                if (x >= 0) cnt += n2; // 0 * anything = 0 <= x iff x >= 0
+            } else if (a > 0) {
+                // need b <= floor(x / a)
+                long targ = Math.floorDiv(x, a);
+                cnt += upperBound(a2, targ);
+            } else { // a < 0
+                // need b >= ceil(x / a)
+                // ceil(x/a) = -floorDiv(-x, a)
+                long targ = -Math.floorDiv(-x, a);
+                int idx = lowerBound(a2, targ);
+                cnt += (n2 - idx);
+            }
+        }
+        return cnt;
+    }
+
+    // first index > target
+    private int upperBound(int[] arr, long target) {
+        int l = 0, r = arr.length;
+        while (l < r) {
+            int m = (l + r) >>> 1;
+            if (arr[m] <= target) l = m + 1;
+            else r = m;
+        }
+        return l;
+    }
+
+    // first index >= target
+    private int lowerBound(int[] arr, long target) {
+        int l = 0, r = arr.length;
+        while (l < r) {
+            int m = (l + r) >>> 1;
+            if (arr[m] < target) l = m + 1;
+            else r = m;
+        }
+        return l;
+    }
+}
