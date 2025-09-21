@@ -1,0 +1,32 @@
+import java.math.BigInteger;
+
+class Solution {
+    // k is 1-indexed position, operations contains 0/1
+    public char kthCharacter(long k, int[] operations) {
+        int m = operations.length;
+
+        // exact total length = 2^m as BigInteger
+        BigInteger len = BigInteger.ONE.shiftLeft(m);
+
+        long shift = 0;
+
+        // walk backwards
+        for (int i = m - 1; i >= 0; --i) {
+            // half = len / 2
+            BigInteger half = len.shiftRight(1);
+
+            // compare k with half
+            int cmp = BigInteger.valueOf(k).compareTo(half);
+            if (cmp > 0) { // k > half => in second half
+                // safe to subtract: half <= k so fits in long
+                k -= half.longValue();
+                if (operations[i] == 1) shift++;
+            }
+            // move to the previous stage
+            len = half;
+        }
+
+        shift %= 26;
+        return (char) ('a' + (int) shift);
+    }
+}
