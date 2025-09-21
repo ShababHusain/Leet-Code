@@ -1,0 +1,63 @@
+class Solution {
+    private static final int MOD = 1_000_000_007;
+
+    public int possibleStringCount(String word, int k) {
+        // 1) build group counts
+        int n = word.length();
+        java.util.ArrayList<Integer> groups = new java.util.ArrayList<>();
+        for (int i = 0; i < n; ) {
+            int j = i;
+            while (j < n && word.charAt(j) == word.charAt(i)) j++;
+            groups.add(j - i);
+            i = j;
+        }
+
+        int m = groups.size();
+
+        // 2) total combinations P = product(ci)
+        long P = 1;
+        for (int c : groups) {
+            P = (P * c) % MOD;
+        }
+
+        // 3) quick answer if minimal possible length >= k
+        // minimal possible length = choose 1 from each group = m
+        if (m >= k) {
+            return (int) P;
+        }
+
+        // 4) otherwise compute number of ways with total length < k
+        // dp[s] = number of ways to obtain total length = s using processed groups
+        // we only need s in [0 .. k-1]
+        int maxS = k - 1;
+        long[] dp = new long[maxS + 1];
+        dp[0] = 1; // zero groups gives sum 0
+
+        for (int c : groups) {
+            // prefix sums of dp: prefix[t] = sum_{i=0..t-1} dp[i]
+            long[] prefix = new long[maxS + 2];
+            for (int s = 0; s <= maxS; s++) {
+                prefix[s + 1] = (prefix[s] + dp[s]) % MOD;
+            }
+
+            long[] newDp = new long[maxS + 1];
+            // newDp[s] = sum_{t=1..min(c,s)} dp[s - t]
+            // = sum_{i = s-min(c,s) .. s-1} dp[i] = prefix[s] - prefix[s - min(c,s)]
+            for (int s = 0; s <= maxS; s++) {
+                int minTake = Math.min(c, s);
+                int leftIdx = s - minTake; // inclusive
+                // prefix indexes: prefix[x] = sum dp[0..x-1]
+                long val = (prefix[s] - prefix[leftIdx] + MOD) % MOD;
+                newDp[s] = val;
+            }
+            dp = newDp;
+        }
+
+        long small = 0;
+        for (int s = 0; s <= maxS; s++) small = (small + dp[s]) % MOD;
+
+        long ans = (P - small) % MOD;
+        if (ans < 0) ans += MOD;
+        return (int) ans;
+    }
+}
