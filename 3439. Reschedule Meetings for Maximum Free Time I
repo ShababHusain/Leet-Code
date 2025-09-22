@@ -1,0 +1,29 @@
+class Solution {
+    public int maxFreeTime(int eventTime, int k, int[] startTime, int[] endTime) {
+        int n = startTime.length;
+        int[] gaps = new int[n + 1];
+
+        // Initial gap before first meeting
+        gaps[0] = startTime[0];
+
+        // Gaps between meetings
+        for (int i = 1; i < n; i++) {
+            gaps[i] = startTime[i] - endTime[i - 1];
+        }
+
+        // Final gap after last meeting
+        gaps[n] = eventTime - endTime[n - 1];
+
+        // Sliding window of size k+1
+        int maxFree = 0, windowSum = 0;
+        for (int i = 0; i <= n; i++) {
+            windowSum += gaps[i];
+            if (i >= k) {
+                maxFree = Math.max(maxFree, windowSum);
+                windowSum -= gaps[i - k];
+            }
+        }
+
+        return maxFree;
+    }
+}
