@@ -1,0 +1,41 @@
+class Solution {
+    public int maxFreeTime(int eventTime, int[] startTime, int[] endTime) {
+        int n = startTime.length;
+        int[] gaps = new int[n + 1];
+
+        // Compute gaps between meetings
+        gaps[0] = startTime[0]; // before first meeting
+        for (int i = 1; i < n; i++) {
+            gaps[i] = startTime[i] - endTime[i - 1];
+        }
+        gaps[n] = eventTime - endTime[n - 1]; // after last meeting
+
+        // Precompute max gaps to the left and right of each index
+        int[] maxLeft = new int[n + 1];
+        int[] maxRight = new int[n + 1];
+        maxLeft[0] = gaps[0];
+        for (int i = 1; i <= n; i++) {
+            maxLeft[i] = Math.max(maxLeft[i - 1], gaps[i]);
+        }
+        maxRight[n] = gaps[n];
+        for (int i = n - 1; i >= 0; i--) {
+            maxRight[i] = Math.max(maxRight[i + 1], gaps[i]);
+        }
+
+        int maxFree = 0;
+        for (int i = 0; i < n; i++) {
+            int duration = endTime[i] - startTime[i];
+            int combinedGap = gaps[i] + gaps[i + 1];
+
+            // Can we move this meeting to a different gap?
+            boolean canMove = false;
+            if (i > 0 && maxLeft[i - 1] >= duration) canMove = true;
+            if (i + 2 <= n && maxRight[i + 2] >= duration) canMove = true;
+
+            int freeTime = canMove ? combinedGap + duration : combinedGap;
+            maxFree = Math.max(maxFree, freeTime);
+        }
+
+        return maxFree;
+    }
+}
