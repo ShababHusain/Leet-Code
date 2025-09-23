@@ -1,0 +1,48 @@
+import java.util.*;
+
+class Solution {
+    public int mostBooked(int n, int[][] meetings) {
+        Arrays.sort(meetings, Comparator.comparingInt(a -> a[0]));
+
+        PriorityQueue<Integer> available = new PriorityQueue<>();
+        for (int i = 0; i < n; i++) available.offer(i);
+
+        // [endTime, room]
+        PriorityQueue<long[]> ongoing = new PriorityQueue<>((a, b) -> {
+            if (a[0] != b[0]) return Long.compare(a[0], b[0]);
+            return Integer.compare((int) a[1], (int) b[1]);
+        });
+
+        int[] roomCount = new int[n];
+
+        for (int[] meeting : meetings) {
+            int start = meeting[0], end = meeting[1];
+            long duration = end - start;
+
+            // Free up rooms
+            while (!ongoing.isEmpty() && ongoing.peek()[0] <= start) {
+                available.offer((int) ongoing.poll()[1]);
+            }
+
+            if (!available.isEmpty()) {
+                int room = available.poll();
+                ongoing.offer(new long[]{end, room});
+                roomCount[room]++;
+            } else {
+                long[] next = ongoing.poll();
+                long newEnd = next[0] + duration;
+                ongoing.offer(new long[]{newEnd, next[1]});
+                roomCount[(int) next[1]]++;
+            }
+        }
+
+        int maxRoom = 0;
+        for (int i = 1; i < n; i++) {
+            if (roomCount[i] > roomCount[maxRoom]) {
+                maxRoom = i;
+            }
+        }
+
+        return maxRoom;
+    }
+}
