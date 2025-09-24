@@ -1,0 +1,26 @@
+class Solution {
+    public int maximumLength(int[] nums) {
+        int maxLen = 0;
+
+        // Try all 4 parity patterns
+        for (int firstParity = 0; firstParity <= 1; firstParity++) {
+            for (int secondParity = 0; secondParity <= 1; secondParity++) {
+                int len = 0;
+                int turn = 0;
+
+                for (int num : nums) {
+                    int parity = num % 2;
+                    if ((turn % 2 == 0 && parity == firstParity) ||
+                        (turn % 2 == 1 && parity == secondParity)) {
+                        len++;
+                        turn++;
+                    }
+                }
+
+                maxLen = Math.max(maxLen, len);
+            }
+        }
+
+        return maxLen;
+    }
+}
