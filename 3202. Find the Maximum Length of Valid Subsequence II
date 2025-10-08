@@ -1,0 +1,19 @@
+class Solution {
+    public int maximumLength(int[] nums, int k) {
+        int longest = 0;
+
+        for (int val = 0; val < k; val++) {
+            int[] dp = new int[k];
+
+            for (int x : nums) {
+                int m = x % k;
+                int want = (val - m + k) % k;
+                int best = dp[want];
+                dp[m] = Math.max(dp[m], best + 1);
+                longest = Math.max(longest, dp[m]);
+            }
+        }
+
+        return longest;
+    }
+}
