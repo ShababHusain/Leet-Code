@@ -1,0 +1,75 @@
+public class Solution {
+    private static class Node {
+        Map<String, Node> children = new HashMap<>();
+        boolean deleted = false;
+    }
+
+    private Node root = new Node();
+    private Map<String, List<Node>> seen = new HashMap<>();
+
+    public List<List<String>> deleteDuplicateFolder(List<List<String>> paths) {
+        // build trie
+        for (List<String> p : paths) {
+            Node cur = root;
+            for (String name : p) {
+                cur.children.putIfAbsent(name, new Node());
+                cur = cur.children.get(name);
+            }
+        }
+
+        // serialize subtrees; do NOT add root's serialization to 'seen'
+        serialize(root, true);
+
+        // mark duplicates (all nodes with same serialization and count > 1)
+        for (List<Node> nodes : seen.values()) {
+            if (nodes.size() > 1) {
+                for (Node node : nodes) node.deleted = true;
+            }
+        }
+
+        // collect remaining paths
+        List<List<String>> ans = new ArrayList<>();
+        collect(root, new ArrayList<>(), ans);
+        return ans;
+    }
+
+    // returns serialization of node's subtree (based only on children)
+    // isRoot == true means do not record this node into 'seen'
+    private String serialize(Node node, boolean isRoot) {
+        if (node.children.isEmpty()) {
+            return ""; // leaf => empty serialization
+        }
+
+        // sort child names so serialization is canonical
+        List<String> names = new ArrayList<>(node.children.keySet());
+        Collections.sort(names);
+
+        StringBuilder sb = new StringBuilder();
+        for (String name : names) {
+            Node ch = node.children.get(name);
+            String childSerial = serialize(ch, false);
+            sb.append(name).append("(").append(childSerial).append(")");
+        }
+        String serial = sb.toString();
+
+        // only record non-empty serializations for non-root nodes
+        if (!isRoot && !serial.isEmpty()) {
+            seen.computeIfAbsent(serial, k -> new ArrayList<>()).add(node);
+        }
+        return serial;
+    }
+
+    // DFS to collect paths; skip any subtree whose node.deleted == true
+    private void collect(Node node, List<String> path, List<List<String>> res) {
+        if (node.deleted) return;          // this folder and all its children are removed
+        if (!path.isEmpty()) res.add(new ArrayList<>(path));
+        // iterate children in any order (problem allows any order), but we use sorted order for determinism
+        List<String> names = new ArrayList<>(node.children.keySet());
+        Collections.sort(names);
+        for (String name : names) {
+            path.add(name);
+            collect(node.children.get(name), path, res);
+            path.remove(path.size() - 1);
+        }
+    }
+}
