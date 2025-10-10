@@ -1,0 +1,76 @@
+import java.util.*;
+
+class Solution {
+    int[] nums;
+    List<Integer>[] graph;
+    int[] subtreeXor, inTime, outTime;
+    int time = 0;
+    int totalXor = 0;
+    List<int[]> edgesList = new ArrayList<>();
+
+    public int minimumScore(int[] nums, int[][] edges) {
+        int n = nums.length;
+        this.nums = nums;
+        graph = new ArrayList[n];
+        for (int i = 0; i < n; i++) graph[i] = new ArrayList<>();
+        for (int[] e : edges) {
+            graph[e[0]].add(e[1]);
+            graph[e[1]].add(e[0]);
+        }
+
+        subtreeXor = new int[n];
+        inTime = new int[n];
+        outTime = new int[n];
+
+        dfs(0, -1);
+
+        int ans = Integer.MAX_VALUE;
+        int m = edgesList.size();
+
+        for (int i = 0; i < m; i++) {
+            int a = edgesList.get(i)[1]; // child
+            for (int j = i + 1; j < m; j++) {
+                int b = edgesList.get(j)[1]; // child
+                ans = Math.min(ans, computeScore(a, b));
+            }
+        }
+        return ans;
+    }
+
+    private void dfs(int node, int parent) {
+        inTime[node] = ++time;
+        subtreeXor[node] = nums[node];
+        for (int nei : graph[node]) {
+            if (nei == parent) continue;
+            edgesList.add(new int[]{node, nei});
+            dfs(nei, node);
+            subtreeXor[node] ^= subtreeXor[nei];
+        }
+        outTime[node] = time;
+        if (parent == -1) totalXor = subtreeXor[node];
+    }
+
+    private boolean isAncestor(int u, int v) {
+        return inTime[u] <= inTime[v] && outTime[v] <= outTime[u];
+    }
+
+    private int computeScore(int a, int b) {
+        int x1, x2, x3;
+        if (isAncestor(a, b)) {
+            x1 = subtreeXor[b];
+            x2 = subtreeXor[a] ^ subtreeXor[b];
+            x3 = totalXor ^ subtreeXor[a];
+        } else if (isAncestor(b, a)) {
+            x1 = subtreeXor[a];
+            x2 = subtreeXor[b] ^ subtreeXor[a];
+            x3 = totalXor ^ subtreeXor[b];
+        } else {
+            x1 = subtreeXor[a];
+            x2 = subtreeXor[b];
+            x3 = totalXor ^ subtreeXor[a] ^ subtreeXor[b];
+        }
+        int maxVal = Math.max(x1, Math.max(x2, x3));
+        int minVal = Math.min(x1, Math.min(x2, x3));
+        return maxVal - minVal;
+    }
+}
