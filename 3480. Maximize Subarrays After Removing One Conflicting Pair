@@ -1,0 +1,101 @@
+import java.util.*;
+
+public class Solution {
+    // Method name expected by judge
+    public long maxSubarrays(int n, int[][] conflictingPairs) {
+        // Normalize pairs to u < v and gather per-u lists
+        List<List<Integer>> byU = new ArrayList<>(n + 1);
+        for (int i = 0; i <= n; i++) byU.add(new ArrayList<>());
+        List<long[]> inputPairs = new ArrayList<>();
+        for (int[] p : conflictingPairs) {
+            int a = p[0], b = p[1];
+            if (a == b) continue;
+            int u = Math.min(a, b), v = Math.max(a, b);
+            byU.get(u).add(v);
+            inputPairs.add(new long[]{u, v});
+        }
+
+        final int INF = n + 1;
+        int SHIFT = 17; // 2^17 = 131072 > max n
+
+        // Multiset as TreeMap<key, count>, key = (v << SHIFT) | u
+        TreeMap<Long, Integer> multiset = new TreeMap<>();
+
+        // Arrays to store min1, idx1 (the u that provided min1), min2 for each L (1-indexed)
+        int[] min1 = new int[n + 2];
+        int[] idx1 = new int[n + 2];
+        int[] min2 = new int[n + 2];
+
+        // Initialize arrays
+        for (int i = 1; i <= n; i++) {
+            min1[i] = INF;
+            idx1[i] = -1;
+            min2[i] = INF;
+        }
+
+        // Add pairs for u from n down to 1, maintaining multiset
+        for (int L = n; L >= 1; L--) {
+            // add all pairs with u == L
+            for (int v : byU.get(L)) {
+                long key = (((long) v) << SHIFT) | (long) L;
+                multiset.put(key, multiset.getOrDefault(key, 0) + 1);
+            }
+
+            if (multiset.isEmpty()) {
+                min1[L] = INF;
+                idx1[L] = -1;
+                min2[L] = INF;
+            } else {
+                Map.Entry<Long, Integer> e1 = multiset.firstEntry();
+                long key1 = e1.getKey();
+                int cnt1 = e1.getValue();
+                int v1 = (int) (key1 >> SHIFT);
+                int u1 = (int) (key1 & ((1 << SHIFT) - 1));
+                min1[L] = v1;
+                idx1[L] = u1;
+                if (cnt1 >= 2) {
+                    // second smallest is same v
+                    min2[L] = v1;
+                } else {
+                    Map.Entry<Long, Integer> e2 = multiset.higherEntry(key1);
+                    if (e2 == null) min2[L] = INF;
+                    else {
+                        long key2 = e2.getKey();
+                        int v2 = (int) (key2 >> SHIFT);
+                        min2[L] = v2;
+                    }
+                }
+            }
+        }
+
+        // compute base count
+        long base = 0;
+        for (int L = 1; L <= n; L++) {
+            if (min1[L] == INF) base += (n - L + 1);
+            else base += (min1[L] - L);
+        }
+
+        // Compute contribution per pair (v,u) key: sum over L where idx1[L]==u && min1[L]==v of (min2[L] - min1[L])
+        HashMap<Long, Long> contrib = new HashMap<>();
+        for (int L = 1; L <= n; L++) {
+            if (min1[L] == INF) continue;
+            int v = min1[L], u = idx1[L];
+            long pairKey = (((long) v) << SHIFT) | (long) u;
+            long add = (long) (min2[L] - min1[L]); // could be 0 if min2==min1 or INF-case handled (INF = n+1)
+            if (add == 0) continue;
+            contrib.put(pairKey, contrib.getOrDefault(pairKey, 0L) + add);
+        }
+
+        // Now, among all input pairs, compute maximum base + contrib(pair)
+        long ans = 0;
+        // If there are no conflicting pairs, the answer is total subarrays, but per constraints there is at least one pair
+        for (long[] p : inputPairs) {
+            int u = (int) p[0], v = (int) p[1];
+            long key = (((long) v) << SHIFT) | (long) u;
+            long add = contrib.getOrDefault(key, 0L);
+            ans = Math.max(ans, base + add);
+        }
+
+        return ans;
+    }
+}
