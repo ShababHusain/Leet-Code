@@ -1,0 +1,23 @@
+import java.util.*;
+
+class Solution {
+    public int maxSum(int[] nums) {
+        // Sum of distinct positive values
+        Set<Integer> seen = new HashSet<>();
+        long sumPos = 0;
+        int maxElem = Integer.MIN_VALUE;
+        for (int x : nums) {
+            maxElem = Math.max(maxElem, x);
+            if (x > 0) {
+                if (!seen.contains(x)) {
+                    sumPos += x;
+                    seen.add(x);
+                }
+            }
+        }
+        // If we got any positive contribution, that's optimal
+        if (sumPos > 0) return (int) sumPos;
+        // Otherwise we must pick at least one element: choose the maximum element (could be 0 or negative)
+        return maxElem;
+    }
+}
