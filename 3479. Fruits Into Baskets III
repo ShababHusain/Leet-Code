@@ -1,0 +1,67 @@
+class Solution {
+    public int numOfUnplacedFruits(int[] fruits, int[] baskets) {
+        int n = fruits.length;
+        int m = baskets.length;
+        // build segtree over baskets capacities
+        SegTree seg = new SegTree(baskets);
+        int unplaced = 0;
+        for (int f : fruits) {
+            // find leftmost index with capacity >= f
+            int idx = seg.findFirstAtLeast(f);
+            if (idx == -1) {
+                unplaced++;
+            } else {
+                // mark basket used by setting its capacity to -INF (so it won't be chosen again)
+                seg.update(idx, Integer.MIN_VALUE);
+            }
+        }
+        return unplaced;
+    }
+    
+    // Segment tree supporting:
+    // - build from array
+    // - update pos to value
+    // - findFirstAtLeast(target): leftmost index with value >= target, or -1 if none
+    static class SegTree {
+        int n;
+        int[] tree; // store max value
+        int size;
+        SegTree(int[] arr) {
+            n = arr.length;
+            size = 1;
+            while (size < n) size <<= 1;
+            tree = new int[2 * size];
+            // init with very small values
+            for (int i = 0; i < 2*size; ++i) tree[i] = Integer.MIN_VALUE;
+            // build leaves
+            for (int i = 0; i < n; ++i) tree[size + i] = arr[i];
+            // build internal nodes
+            for (int i = size - 1; i >= 1; --i) tree[i] = Math.max(tree[2*i], tree[2*i+1]);
+        }
+        // point update: set position pos to value val
+        void update(int pos, int val) {
+            int idx = size + pos;
+            tree[idx] = val;
+            idx >>= 1;
+            while (idx >= 1) {
+                tree[idx] = Math.max(tree[2*idx], tree[2*idx+1]);
+                idx >>= 1;
+            }
+        }
+        // find leftmost index with value >= target, or -1 if none
+        int findFirstAtLeast(int target) {
+            if (tree[1] < target) return -1;
+            int idx = 1;
+            while (idx < size) {
+                // go to left child if it satisfies
+                if (tree[2*idx] >= target) {
+                    idx = 2*idx;
+                } else {
+                    idx = 2*idx + 1;
+                }
+            }
+            int pos = idx - size;
+            return pos < n ? pos : -1;
+        }
+    }
+}
