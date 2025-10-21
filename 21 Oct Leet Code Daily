@@ -1,0 +1,83 @@
+class Solution {
+
+    /**
+     * Finds the insertion point for x in a sorted array,
+     * which is the first index i such that a[i] >= x.
+     */
+    private int bisect_left(int[] a, int x) {
+        int low = 0;
+        int high = a.length;
+        while (low < high) {
+            int mid = low + (high - low) / 2;
+            if (a[mid] < x) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return low;
+    }
+
+    /**
+     * Finds the insertion point for x in a sorted array,
+     * which is the first index i such that a[i] > x.
+     */
+    private int bisect_right(int[] a, int x) {
+        int low = 0;
+        int high = a.length;
+        while (low < high) {
+            int mid = low + (high - low) / 2;
+            if (a[mid] <= x) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return low;
+    }
+
+    // Renamed this method from maxFrequencyScore to maxFrequency
+    public int maxFrequency(int[] nums, int k, int numOperations) {
+        int n = nums.length;
+        
+        // Sort the array to use binary search for range queries
+        Arrays.sort(nums);
+        
+        // Create the set of candidate target values T.
+        // The optimal T must be one of num, num-k, or num+k.
+        Set<Integer> candidates = new HashSet<>();
+        for (int num : nums) {
+            candidates.add(num);
+            candidates.add(num - k);
+            candidates.add(num + k);
+        }
+        
+        int max_freq = 0;
+        
+        // Test each candidate target value
+        for (int target : candidates) {
+            
+            // 1. Find the total count of numbers in the window [target - k, target + k]
+            int idx_right = bisect_right(nums, target + k);
+            int idx_left = bisect_left(nums, target - k);
+            int total_in_window = idx_right - idx_left;
+            
+            // 2. Find the count of numbers exactly equal to the target
+            int idx_exact_right = bisect_right(nums, target);
+            int idx_exact_left = bisect_left(nums, target);
+            int exact_count = idx_exact_right - idx_exact_left;
+            
+            // 3. The 'range_count' are those in the window but not equal to target
+            int range_count = total_in_window - exact_count;
+            
+            // 4. The frequency for this target is:
+            //    All exact matches + min(changeable matches, ops_available)
+            int current_freq = exact_count + Math.min(range_count, numOperations);
+            
+            // 5. Update the overall maximum frequency
+            max_freq = Math.max(max_freq, current_freq);
+        }
+        
+        return max_freq;
+    }
+}
