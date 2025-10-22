@@ -1,0 +1,75 @@
+class Solution {
+    private static final int INF = Integer.MAX_VALUE / 2;
+    private int n;
+    private int[][] fruits;
+    private int[][] memo;
+    
+    // DFS + memoization for a single child's path
+    private int dfs(int row, int col, int moves, List<int[]> dirs) {
+        // Base case: reached bottom-right
+        if (row == n - 1 && col == n - 1) {
+            return (moves == 0) ? 0 : INF;
+        }
+        
+        // Invalid: no moves left or on main diagonal (Child 1's path)
+        if (moves == 0 || row == col) {
+            return INF;
+        }
+        
+        // Memoization check
+        if (memo[row][col] != -1) {
+            return memo[row][col];
+        }
+        
+        long best = -1;
+        for (int[] d : dirs) {
+            int nr = row + d[0], nc = col + d[1];
+            if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
+                int val = dfs(nr, nc, moves - 1, dirs);
+                if (val != INF) {
+                    best = Math.max(best, (long) val);
+                }
+            }
+        }
+        
+        int result = (best < 0) ? INF : fruits[row][col] + (int) best;
+        memo[row][col] = result;
+        return result;
+    }
+    
+    public int maxCollectedFruits(int[][] fruits) {
+        this.n = fruits.length;
+        this.fruits = fruits;
+        
+        // Step 1: Sum of main diagonal (Child 1's path)
+        long total = 0;
+        for (int i = 0; i < n; i++) {
+            total += fruits[i][i];
+        }
+        
+        // Step 2: Child 2 path - from top-right (0, n-1) 
+        // Moves: down-left (1,-1), down (1,0), down-right (1,1)
+        List<int[]> downDirs = Arrays.asList(
+            new int[]{1, -1},  // down-left
+            new int[]{1, 0},   // down
+            new int[]{1, 1}    // down-right
+        );
+        memo = new int[n][n];
+        for (int[] row : memo) Arrays.fill(row, -1);
+        int child2 = dfs(0, n - 1, n - 1, downDirs);
+        
+        // Step 3: Child 3 path - from bottom-left (n-1, 0)
+        // Moves: up-right (-1,1), right (0,1), down-right (1,1)
+        List<int[]> rightDirs = Arrays.asList(
+            new int[]{-1, 1},  // up-right
+            new int[]{0, 1},   // right
+            new int[]{1, 1}    // down-right
+        );
+        for (int[] row : memo) Arrays.fill(row, -1);
+        int child3 = dfs(n - 1, 0, n - 1, rightDirs);
+        
+        // Total: diagonal + child2 path + child3 path
+        // The destination (n-1,n-1) is only counted in diagonal sum
+        return (int) (total + child2 + child3);
+    }
+}
